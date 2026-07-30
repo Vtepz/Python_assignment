@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, jsonify
 from flask_cors import CORS
 from sqlalchemy import text
@@ -14,7 +16,13 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    CORS(app, resources={r"/api/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}})
+    allowed_origins = os.getenv("ALLOWED_ORIGINS")
+    origins = (
+        [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
+        if allowed_origins
+        else ["http://localhost:5173", "http://127.0.0.1:5173"]
+    )
+    CORS(app, resources={r"/api/*": {"origins": origins}})
     db.init_app(app)
 
     app.register_blueprint(auth_bp)
