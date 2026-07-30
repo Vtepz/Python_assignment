@@ -25,8 +25,17 @@ def build_database_uri():
     return url
 
 
+def build_secret_key():
+    secret_key = os.getenv("SECRET_KEY")
+    if secret_key:
+        return secret_key
+    if os.getenv("FLASK_ENV") == "production":
+        raise RuntimeError("SECRET_KEY must be set when FLASK_ENV=production")
+    return "dev-secret-key"
+
+
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
+    SECRET_KEY = build_secret_key()
     SQLALCHEMY_DATABASE_URI = build_database_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JSON_SORT_KEYS = False
