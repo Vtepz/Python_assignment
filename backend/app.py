@@ -25,6 +25,12 @@ def create_app():
     def home():
         return jsonify({"message": "HRM System API is running", "status": "ok"})
 
+    @app.cli.command("init-db")
+    def init_db():
+        """Create all database tables."""
+        db.create_all()
+        print("Database tables created.")
+
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({"message": "Route not found"}), 404
