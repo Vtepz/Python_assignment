@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
+from sqlalchemy import text
 
 from config import Config
 from models import db
@@ -24,6 +25,14 @@ def create_app():
     @app.route("/")
     def home():
         return jsonify({"message": "HRM System API is running", "status": "ok"})
+
+    @app.route("/api/health")
+    def health():
+        try:
+            db.session.execute(text("SELECT 1"))
+            return jsonify({"status": "ok", "database": "connected"})
+        except Exception as error:
+            return jsonify({"status": "error", "database": "unreachable", "message": str(error)}), 500
 
     @app.cli.command("init-db")
     def init_db():
