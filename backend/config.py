@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy.engine import URL
+from sqlalchemy.engine import URL, make_url
 
 load_dotenv()
 
@@ -17,25 +17,12 @@ def build_database_uri():
             database=os.getenv("DB_NAME", "hrm_system"),
         )
 
-    # Beginner-friendly repair for passwords containing @ in DATABASE_URL.
-    # Example: postgresql+psycopg://postgres:pa@ss@localhost:5432/hrm_system
-    if "://" in database_url and "@" in database_url:
-        drivername, rest = database_url.split("://", 1)
-        credentials, location = rest.rsplit("@", 1)
-        if ":" in credentials:
-            username, password = credentials.split(":", 1)
-            host_port, _, database = location.partition("/")
-            host, _, port = host_port.partition(":")
-            return URL.create(
-                drivername,
-                username=username,
-                password=password,
-                host=host,
-                port=int(port) if port else None,
-                database=database or None,
-            )
-
-    return database_url
+    url = make_url(database_url)
+    if url.drivername in ("postgres", "postgresql"):
+        url = url.set(drivername="postgresql+psycopg")
+    if "sslmode" not in url.query:
+        url = url.update_query_dict({"sslmode": "require"})
+    return url
 
 
 class Config:
